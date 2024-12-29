@@ -3,12 +3,16 @@ import ssl
 import yt_dlp
 from flask import Flask, render_template, request, send_file, abort, jsonify
 from flask_cors import CORS
+from dotenv import load_dotenv
 
+load_dotenv()
 # Disable SSL verification (use with caution)
 ssl._create_default_https_context = ssl._create_unverified_context
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+
+BACKEND_URL = os.getenv('backendUrl', 'http://127.0.0.1:5000')
 
 # Ensure downloads directory exists
 DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), 'downloads')
@@ -16,7 +20,7 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', backend_url=BACKEND_URL)
 
 @app.route('/video-info', methods=['POST'])
 def video_info():

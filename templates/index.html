@@ -240,6 +240,7 @@
     </div>
 
     <script>
+        const serverUrl = "{{ backend_url }}";
         const urlInput = document.getElementById('url');
         const previewContainer = document.getElementById('preview-container');
         const thumbnail = document.getElementById('thumbnail');
@@ -261,7 +262,7 @@
                 const formData = new FormData();
                 formData.append('url', url);
 
-                const response = await fetch('http://127.0.0.1:5001/video-info', {
+                const response = await fetch(serverUrl + '/video-info', {
                     method: 'POST',
                     body: formData
                 });
@@ -342,7 +343,7 @@
             }, 500);
 
             try {
-                const response = await fetch('http://127.0.0.1:5001/download', {
+                const response = await fetch(serverUrl + '/download', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
