@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --background: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.5;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            margin-top: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, var(--primary), var(--primary-hover));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            transition: border-color 0.15s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            background-color: #94a3b8;
+        }
+
+        .preview-container {
+            margin-top: 1.5rem;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .preview-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: #f8fafc;
+        }
+
+        .thumbnail {
+            width: 100%;
+            max-width: 480px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-info {
+            text-align: center;
+            width: 100%;
+        }
+
+        .video-title {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .video-channel {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .progress-container {
+            margin-top: 1.5rem;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            margin-top: 0.5rem;
+            text-align: center;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        #result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        .success {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .error {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YouTube Downloader</h1>
+        <p class="subtitle">Download videos and audio from YouTube</p>
+        
+        <div class="card">
+            <form id="download-form">
+                <input type="url" id="url" placeholder="Enter YouTube URL" required>
+                <select id="type">
+                    <option value="audio">Audio (MP3)</option>
+                    <option value="video">Video (MP4)</option>
+                </select>
+
+                <div class="preview-container" id="preview-container">
+                    <div class="preview-content">
+                        <img id="thumbnail" class="thumbnail" alt="Video thumbnail">
+                        <div class="video-info">
+                            <div id="video-title" class="video-title"></div>
+                            <div id="video-channel" class="video-channel"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="download-button">Download</button>
+            </form>
+
+            <div class="progress-container" id="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-text" id="progress-text">Starting download...</div>
+            </div>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const urlInput = document.getElementById('url');
+        const previewContainer = document.getElementById('preview-container');
+        const thumbnail = document.getElementById('thumbnail');
+        const videoTitle = document.getElementById('video-title');
+        const videoChannel = document.getElementById('video-channel');
+        const downloadButton = document.getElementById('download-button');
+        let lastUrl = '';
+        let isFetching = false;
+
+        async function fetchVideoInfo(url) {
+            if (!url || isFetching) return;
+            
+            try {
+                isFetching = true;
+                downloadButton.disabled = true;
+                downloadButton.textContent = 'Fetching Preview...';
+                previewContainer.style.display = 'none';
+
+                const formData = new FormData();
+                formData.append('url', url);
+
+                const response = await fetch('http://127.0.0.1:5001/video-info', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    thumbnail.src = data.thumbnail;
+                    videoTitle.textContent = data.title;
+                    videoChannel.textContent = data.channel;
+                    previewContainer.style.display = 'block';
+                    downloadButton.disabled = false;
+                    downloadButton.textContent = 'Download';
+                } else {
+                    previewContainer.style.display = 'none';
+                    downloadButton.disabled = true;
+                    downloadButton.textContent = 'Invalid URL';
+                }
+            } catch (error) {
+                console.error('Error fetching video info:', error);
+                previewContainer.style.display = 'none';
+                downloadButton.disabled = true;
+                downloadButton.textContent = 'Error Loading Preview';
+            } finally {
+                isFetching = false;
+            }
+        }
+
+        let debounceTimer;
+        urlInput.addEventListener('input', async (e) => {
+            const url = e.target.value.trim();
+            downloadButton.disabled = true;
+            
+            if (url === '') {
+                downloadButton.textContent = 'Download';
+                previewContainer.style.display = 'none';
+                return;
+            }
+
+            if (url !== lastUrl && (url.includes('youtube.com/') || url.includes('youtu.be/'))) {
+                clearTimeout(debounceTimer);
+                downloadButton.textContent = 'Fetching Preview...';
+                
+                debounceTimer = setTimeout(() => {
+                    lastUrl = url;
+                    fetchVideoInfo(url);
+                }, 500);
+            } else if (!url.includes('youtube.com/') && !url.includes('youtu.be/')) {
+                downloadButton.textContent = 'Invalid URL';
+                previewContainer.style.display = 'none';
+            }
+        });
+
+        document.getElementById('download-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const url = document.getElementById('url').value;
+            const type = document.getElementById('type').value;
+            const button = document.getElementById('download-button');
+            const resultDiv = document.getElementById('result');
+            const progressContainer = document.getElementById('progress-container');
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+
+            // Reset UI
+            resultDiv.className = '';
+            resultDiv.textContent = '';
+            button.disabled = true;
+            progressContainer.style.display = 'block';
+            let progress = 0;
+
+            // Simulate progress while waiting for download
+            const progressInterval = setInterval(() => {
+                if (progress < 90) {
+                    progress += Math.random() * 10;
+                    progressFill.style.width = `${Math.min(progress, 90)}%`;
+                    progressText.textContent = `Downloading... ${Math.round(Math.min(progress, 90))}%`;
+                }
+            }, 500);
+
+            try {
+                const response = await fetch('http://127.0.0.1:5001/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `url=${encodeURIComponent(url)}&type=${type}`
+                });
+
+                if (response.ok) {
+                    // Complete the progress bar
+                    progressFill.style.width = '100%';
+                    progressText.textContent = 'Download complete!';
+                    
+                    const blob = await response.blob();
+                    const contentDisposition = response.headers.get('Content-Disposition');
+                    let filename;
+                    
+                    if (contentDisposition) {
+                        filename = contentDisposition.split('filename=')[1].replace(/"/g, '');
+                    } else {
+                        // Generate a default filename based on type
+                        const timestamp = new Date().getTime();
+                        filename = `youtube-${type}-${timestamp}.${type === 'video' ? 'mp4' : 'mp3'}`;
+                    }
+                    
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = filename;
+                    link.click();
+                    
+                    resultDiv.className = 'success';
+                    resultDiv.textContent = 'Download completed successfully!';
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.className = 'error';
+                    resultDiv.textContent = `Error: ${errorText}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            } finally {
+                clearInterval(progressInterval);
+                button.disabled = false;
+                button.textContent = 'Download';
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>
